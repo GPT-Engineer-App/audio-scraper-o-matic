@@ -3,10 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Download } from "lucide-react";
+import { Play, Pause } from "lucide-react";
 
 const Index = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [isPlaying, setIsPlaying] = useState(false);
   const { toast } = useToast();
 
   const { data: audioUrl, isLoading, isError, refetch } = useQuery({
@@ -20,28 +21,16 @@ const Index = () => {
     enabled: false, // Don't run the query automatically
   });
 
-  const handleDownload = () => {
-    if (!audioUrl) {
-      toast({
-        title: "Error",
-        description: "No audio URL available",
-        variant: "destructive",
-      });
-      return;
+  const handlePlayPause = () => {
+    const audioElement = document.getElementById('audioPlayer');
+    if (audioElement) {
+      if (isPlaying) {
+        audioElement.pause();
+      } else {
+        audioElement.play();
+      }
+      setIsPlaying(!isPlaying);
     }
-
-    // Create a temporary anchor element
-    const a = document.createElement('a');
-    a.href = audioUrl;
-    a.download = 'youtube_audio.mp3';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    toast({
-      title: "Success",
-      description: "Audio download started",
-    });
   };
 
   const handleSubmit = (e) => {
@@ -80,9 +69,10 @@ const Index = () => {
       {audioUrl && (
         <div className="text-center">
           <p className="mb-4">Audio extracted successfully!</p>
-          <Button onClick={handleDownload}>
-            <Download className="mr-2 h-4 w-4" />
-            Download Audio
+          <audio id="audioPlayer" src={audioUrl} className="w-full mb-4" controls />
+          <Button onClick={handlePlayPause}>
+            {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+            {isPlaying ? 'Pause' : 'Play'}
           </Button>
         </div>
       )}
