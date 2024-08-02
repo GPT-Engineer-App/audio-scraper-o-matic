@@ -20,7 +20,7 @@ const Index = () => {
     enabled: false, // Don't run the query automatically
   });
 
-  const handleDownload = async () => {
+  const handleDownload = () => {
     if (!audioUrl) {
       toast({
         title: "Error",
@@ -30,30 +30,18 @@ const Index = () => {
       return;
     }
 
-    try {
-      const response = await fetch(audioUrl);
-      if (!response.ok) throw new Error('Download failed');
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = 'youtube_audio.mp3';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      toast({
-        title: "Success",
-        description: "Audio downloaded successfully",
-      });
-    } catch (error) {
-      console.error('Download error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download the audio",
-        variant: "destructive",
-      });
-    }
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    a.href = audioUrl;
+    a.download = 'youtube_audio.mp3';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    toast({
+      title: "Success",
+      description: "Audio download started",
+    });
   };
 
   const handleSubmit = (e) => {
