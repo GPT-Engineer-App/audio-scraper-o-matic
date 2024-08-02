@@ -1,4 +1,4 @@
-import { Music } from "lucide-react";
+import { Globe } from "lucide-react";
 import Index from "./pages/Index.jsx";
 
 /**
@@ -6,9 +6,9 @@ import Index from "./pages/Index.jsx";
  */
 export const navItems = [
   {
-    title: "YouTube Audio Extractor",
+    title: "Website Content Scraper",
     to: "/",
-    icon: <Music className="h-4 w-4" />,
+    icon: <Globe className="h-4 w-4" />,
     page: <Index />,
   },
 ];
