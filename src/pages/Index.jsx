@@ -1,13 +1,17 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useQuery } from "@tanstack/react-query";
-import { Play, Pause } from "lucide-react";
+import { Play, Pause, Volume2 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 const Index = () => {
   const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
+  const audioRef = useRef(null);
   const { toast } = useToast();
 
   const { data: audioUrl, isLoading, isError, refetch } = useQuery({
@@ -21,15 +25,50 @@ const Index = () => {
     enabled: false, // Don't run the query automatically
   });
 
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (audioUrl) {
+      setIsAudioLoaded(false);
+      const audio = new Audio(audioUrl);
+      audio.addEventListener('canplaythrough', () => setIsAudioLoaded(true));
+      audio.addEventListener('error', () => {
+        toast({
+          title: "Error",
+          description: "Failed to load audio. Please try again.",
+          variant: "destructive",
+        });
+      });
+      audioRef.current = audio;
+    }
+  }, [audioUrl, toast]);
+
   const handlePlayPause = () => {
-    const audioElement = document.getElementById('audioPlayer');
-    if (audioElement) {
+    if (audioRef.current) {
       if (isPlaying) {
-        audioElement.pause();
+        audioRef.current.pause();
       } else {
-        audioElement.play();
+        audioRef.current.play().catch(error => {
+          console.error("Error playing audio:", error);
+          toast({
+            title: "Error",
+            description: "Failed to play audio. Please try again.",
+            variant: "destructive",
+          });
+        });
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleVolumeChange = (newVolume) => {
+    setVolume(newVolume[0]);
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume[0];
     }
   };
 
@@ -69,11 +108,23 @@ const Index = () => {
       {audioUrl && (
         <div className="text-center">
           <p className="mb-4">Audio extracted successfully!</p>
-          <audio id="audioPlayer" src={audioUrl} className="w-full mb-4" controls />
-          <Button onClick={handlePlayPause}>
-            {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
-            {isPlaying ? 'Pause' : 'Play'}
-          </Button>
+          {!isAudioLoaded && <p>Loading audio...</p>}
+          <div className="flex items-center justify-center space-x-4 mb-4">
+            <Button onClick={handlePlayPause} disabled={!isAudioLoaded}>
+              {isPlaying ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
+              {isPlaying ? 'Pause' : 'Play'}
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Volume2 className="h-4 w-4" />
+              <Slider
+                className="w-24"
+                value={[volume]}
+                onValueChange={handleVolumeChange}
+                max={1}
+                step={0.01}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
